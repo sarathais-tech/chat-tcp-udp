@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Loki Chat - TCP/UDP</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: linear-gradient(135deg, #1e1e2f, #2b2b45);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            width: 95%;
+            max-width: 500px;
+            background: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header {
+            background: #4a4ae6;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .chat-box {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            background: #f4f4f9;
+        }
+
+        .message {
+            margin-bottom: 10px;
+            padding: 8px 12px;
+            border-radius: 10px;
+            max-width: 75%;
+            font-size: 14px;
+        }
+
+        .me {
+            background: #4a4ae6;
+            color: white;
+            align-self: flex-end;
+        }
+
+        .other {
+            background: #e4e4ef;
+            color: black;
+            align-self: flex-start;
+        }
+
+        .controls {
+            display: flex;
+            padding: 10px;
+            background: #ffffff;
+            border-top: 1px solid #ddd;
+        }
+
+        input {
+            flex: 1;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            outline: none;
+            margin-right: 5px;
+        }
+
+        button {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            background: #4a4ae6;
+            color: white;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background: #3838c7;
+        }
+
+        .udp-section {
+            padding: 10px;
+            border-top: 1px solid #ddd;
+            text-align: center;
+        }
+
+        .udp-result {
+            margin-top: 5px;
+            font-size: 13px;
+            color: #333;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <div class="header">
+        🐱 Loki Chat (TCP + UDP)
+    </div>
+
+    <div style="padding:10px; display:flex;">
+        <input id="username" placeholder="Seu nome">
+        <button onclick="connect()">Conectar</button>
+    </div>
+
+    <div id="chat" class="chat-box"></div>
+
+    <div class="controls">
+        <input id="message" placeholder="Digite sua mensagem...">
+        <button onclick="sendMessage()">Enviar</button>
+    </div>
+
+    <div class="udp-section">
+        <button onclick="udpPing()">Testar UDP (Ping)</button>
+        <div id="udpResult" class="udp-result"></div>
+    </div>
+
+</div>
+
+<script>
+let socket;
+let user;
+
+function connect() {
+    user = document.getElementById("username").value;
+    socket = new WebSocket("ws://" + location.host + "/chat");
+
+    socket.onopen = function() {
+        console.log("Conectado ao servidor");
+    };
+
+    socket.onmessage = function(event) {
+        addMessage(event.data);
+    };
+
+    socket.onclose = function() {
+        alert("Desconectado do servidor.");
+    };
+}
+
+function addMessage(text) {
+    const chat = document.getElementById("chat");
+    const div = document.createElement("div");
+    div.classList.add("message");
+
+    if (text.startsWith(user + ":")) {
+        div.classList.add("me");
+    } else {
+        div.classList.add("other");
+    }
+
+    div.innerText = text;
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+}
+
+function sendMessage() {
+    const msg = document.getElementById("message").value;
+    if (!msg) return;
+
+    socket.send(user + ": " + msg);
+    document.getElementById("message").value = "";
+}
+
+async function udpPing() {
+    const div = document.getElementById("udpResult");
+    div.innerText = "Enviando...";
+    try {
+        const res = await fetch("/udp/ping");
+        const text = await res.text();
+        div.innerText = text;
+    } catch (e) {
+        div.innerText = "Erro ao testar UDP";
+    }
+}
+</script>
+
+</body>
+</html>
