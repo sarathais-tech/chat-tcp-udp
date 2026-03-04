@@ -1,195 +1,865 @@
 <!DOCTYPE html>
+<!-- TESTE UDP BOTAO AQUI -->
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <title>Loki Chat - TCP/UDP</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Loki Chat - Global + Privado (TCP/UDP)</title>
 
-    <style>
-        body {
-            margin: 0;
-            font-family: Arial, Helvetica, sans-serif;
-            background: linear-gradient(135deg, #1e1e2f, #2b2b45);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
+  <style>
+    :root{
+      --bg: #0f1222;
+      --panel: #151a33;
+      --panel2:#10142a;
+      --card:#ffffff;
+      --muted:#aab0c6;
+      --primary:#4a4ae6;
+      --primary2:#3838c7;
+      --bubbleMe:#4a4ae6;
+      --bubbleOther:#e8e9f2;
+      --bubbleBot:#dfe6e9;
+      --text:#0f1222;
+      --shadow: 0 12px 30px rgba(0,0,0,.25);
+      --radius: 16px;
+    }
 
-        .container {
-            width: 95%;
-            max-width: 500px;
-            background: #ffffff;
-            border-radius: 15px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: radial-gradient(1200px 600px at 20% 0%, #1d2350 0%, var(--bg) 55%);
+      color:#fff;
+      height:100vh;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      padding:14px;
+    }
 
-        .header {
-            background: #4a4ae6;
-            color: white;
-            padding: 15px;
-            text-align: center;
-            font-weight: bold;
-            font-size: 18px;
-        }
+    .app{
+      width: min(1100px, 100%);
+      height: min(720px, 100vh);
+      display:flex;
+      border-radius: var(--radius);
+      overflow:hidden;
+      box-shadow: var(--shadow);
+      background: linear-gradient(180deg, var(--panel) 0%, var(--panel2) 100%);
+    }
 
-        .chat-box {
-            flex: 1;
-            padding: 15px;
-            overflow-y: auto;
-            background: #f4f4f9;
-        }
+    /* Sidebar */
+    .sidebar{
+      width: 320px;
+      border-right: 1px solid rgba(255,255,255,.08);
+      display:flex;
+      flex-direction:column;
+    }
+    .sideHeader{
+      padding:14px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .brand{
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+    }
+    .brand .title{
+      font-weight:800;
+      letter-spacing:.2px;
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    .brand .subtitle{
+      font-size:12px;
+      color: var(--muted);
+    }
+    .statusPill{
+      font-size:12px;
+      padding:6px 10px;
+      border-radius:999px;
+      background: rgba(255,255,255,.08);
+      color: var(--muted);
+      display:flex;
+      gap:6px;
+      align-items:center;
+      white-space:nowrap;
+    }
+    .dot{
+      width:8px;
+      height:8px;
+      border-radius:50%;
+      background:#ff5c5c;
+    }
+    .dot.on{ background:#2ecc71; }
 
-        .message {
-            margin-bottom: 10px;
-            padding: 8px 12px;
-            border-radius: 10px;
-            max-width: 75%;
-            font-size: 14px;
-        }
+    .loginBox{
+      padding:14px;
+      display:flex;
+      gap:8px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+    .loginBox input{
+      flex:1;
+      padding:10px 12px;
+      border-radius:12px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color:#fff;
+      outline:none;
+    }
+    .btn{
+      border:none;
+      border-radius:12px;
+      background: var(--primary);
+      color:#fff;
+      font-weight:700;
+      padding:10px 12px;
+      cursor:pointer;
+    }
+    .btn:hover{ background: var(--primary2); }
+    .btn.secondary{
+      background: rgba(255,255,255,.10);
+      color:#fff;
+    }
+    .btn.secondary:hover{
+      background: rgba(255,255,255,.16);
+    }
 
-        .me {
-            background: #4a4ae6;
-            color: white;
-            align-self: flex-end;
-        }
+    .tabs{
+      padding:10px 14px;
+      display:flex;
+      gap:10px;
+      align-items:center;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+    .tab{
+      padding:8px 10px;
+      border-radius:999px;
+      cursor:pointer;
+      font-weight:700;
+      font-size:13px;
+      background: rgba(255,255,255,.08);
+      color:#fff;
+      user-select:none;
+    }
+    .tab.active{
+      background: rgba(74,74,230,.35);
+      outline: 1px solid rgba(74,74,230,.55);
+    }
+    .hint{
+      margin-left:auto;
+      font-size:12px;
+      color: var(--muted);
+      white-space:nowrap;
+    }
 
-        .other {
-            background: #e4e4ef;
-            color: black;
-            align-self: flex-start;
-        }
+    .userList{
+      padding: 8px;
+      overflow:auto;
+      flex:1;
+    }
+    .userItem{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding:10px;
+      border-radius:12px;
+      cursor:pointer;
+    }
+    .userItem:hover{ background: rgba(255,255,255,.06); }
+    .userItem.active{ background: rgba(74,74,230,.25); outline: 1px solid rgba(74,74,230,.35); }
+    .avatar{
+      width:36px;
+      height:36px;
+      border-radius:50%;
+      background: rgba(255,255,255,.10);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:18px;
+    }
+    .userMeta{
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+      min-width:0;
+    }
+    .userName{
+      font-weight:800;
+      font-size:14px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .userSub{
+      font-size:12px;
+      color: var(--muted);
+    }
 
-        .controls {
-            display: flex;
-            padding: 10px;
-            background: #ffffff;
-            border-top: 1px solid #ddd;
-        }
+    /* Main */
+    .main{
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      background: #f4f4f9;
+      color: var(--text);
+    }
 
-        input {
-            flex: 1;
-            padding: 8px;
-            border-radius: 8px;
-            border: 1px solid #ccc;
-            outline: none;
-            margin-right: 5px;
-        }
+    .topbar{
+      padding: 14px 16px;
+      background: #fff;
+      border-bottom: 1px solid #e9e9ef;
+      display:flex;
+      align-items:center;
+      gap:12px;
+      justify-content:space-between;
+    }
+    .convTitle{
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+      min-width:0;
+    }
+    .convTitle .h{
+      font-weight:900;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      min-width:0;
+    }
+    .convTitle .s{
+      font-size:12px;
+      color:#6a6f86;
+    }
 
-        button {
-            padding: 8px 12px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            background: #4a4ae6;
-            color: white;
-            font-weight: bold;
-        }
+    .tools{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
 
-        button:hover {
-            background: #3838c7;
-        }
+    .toggle{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      font-size:12px;
+      color:#444a66;
+      background:#f0f1f6;
+      padding:8px 10px;
+      border-radius:999px;
+      border: 1px solid #e3e5ef;
+      user-select:none;
+    }
+    .toggle input{ accent-color: var(--primary); }
 
-        .udp-section {
-            padding: 10px;
-            border-top: 1px solid #ddd;
-            text-align: center;
-        }
+    .chat{
+      flex:1;
+      padding:16px;
+      overflow:auto;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
 
-        .udp-result {
-            margin-top: 5px;
-            font-size: 13px;
-            color: #333;
-        }
+    .bubbleRow{
+      display:flex;
+      gap:10px;
+      align-items:flex-end;
+    }
+    .bubbleRow.me{ justify-content:flex-end; }
+    .bubbleRow.other{ justify-content:flex-start; }
+    .bubbleRow.bot{ justify-content:flex-start; }
 
-    </style>
+    .bubbleAvatar{
+      width:34px; height:34px;
+      border-radius:50%;
+      background:#e9ebf7;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:18px;
+      flex: 0 0 auto;
+    }
+    .bubble{
+      padding:10px 12px;
+      border-radius:14px;
+      max-width:min(72ch, 72%);
+      box-shadow: 0 3px 10px rgba(0,0,0,.06);
+      font-size:14px;
+      line-height:1.35;
+      white-space:pre-wrap;
+      word-break:break-word;
+    }
+    .bubble.me{
+      background: var(--bubbleMe);
+      color:#fff;
+      border-bottom-right-radius:6px;
+    }
+    .bubble.other{
+      background: var(--bubbleOther);
+      color:#111;
+      border-bottom-left-radius:6px;
+    }
+    .bubble.bot{
+      background: var(--bubbleBot);
+      color:#111;
+      border-left:4px solid #636e72;
+      border-bottom-left-radius:6px;
+    }
+    .metaLine{
+      font-size:11px;
+      opacity:.7;
+      margin-top:6px;
+    }
+
+    .composer{
+      background:#fff;
+      border-top:1px solid #e9e9ef;
+      padding:12px;
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
+    .composer input{
+      flex:1;
+      padding:12px 12px;
+      border-radius:12px;
+      border:1px solid #dde0ee;
+      outline:none;
+      font-size:14px;
+    }
+    .composer .send{
+      padding:12px 14px;
+      border-radius:12px;
+      font-weight:900;
+    }
+
+    .udpBar{
+      padding:10px 12px;
+      border-top:1px solid #e9e9ef;
+      background:#fff;
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:space-between;
+      flex-wrap:wrap;
+    }
+    .udpBar .udpOut{
+      font-size:12px;
+      color:#4b516b;
+      flex:1;
+      min-width:220px;
+    }
+
+    .small{
+      font-size:12px;
+      color:#6a6f86;
+    }
+
+    /* Mobile: esconde sidebar por padrão e mostra um botão */
+    @media (max-width: 860px){
+      body{ padding:0; }
+      .app{ height:100vh; border-radius:0; }
+      .sidebar{ width: 280px; position:absolute; left:0; top:0; bottom:0; transform: translateX(-100%); transition: .22s ease; z-index:10;}
+      .sidebar.open{ transform: translateX(0); }
+      .overlay{
+        display:none;
+        position:absolute; inset:0;
+        background: rgba(0,0,0,.35);
+        z-index:9;
+      }
+      .overlay.show{ display:block; }
+      .mobileMenuBtn{
+        display:inline-flex !important;
+      }
+    }
+    .mobileMenuBtn{
+      display:none;
+      border:none;
+      background:#f0f1f6;
+      border:1px solid #e3e5ef;
+      border-radius:12px;
+      padding:10px 12px;
+      cursor:pointer;
+      font-weight:900;
+    }
+  </style>
 </head>
+
 <body>
+<div class="app">
+  <div id="overlay" class="overlay" onclick="toggleSidebar(false)"></div>
 
-<div class="container">
-
-    <div class="header">
-        🐱 Loki Chat (TCP + UDP)
+  <!-- Sidebar -->
+  <aside id="sidebar" class="sidebar">
+    <div class="sideHeader">
+      <div class="brand">
+        <div class="title">🐱 Loki Chat <span style="opacity:.75;font-size:12px;">TCP/UDP</span></div>
+        <div class="subtitle">Global + Privado + LokiBot</div>
+      </div>
+      <div class="statusPill" title="Status do WebSocket (TCP)">
+        <span id="dot" class="dot"></span>
+        <span id="tcpStatus">Desconectado</span>
+      </div>
     </div>
 
-    <div style="padding:10px; display:flex;">
-        <input id="username" placeholder="Seu nome">
-        <button onclick="connect()">Conectar</button>
+    <div class="loginBox">
+      <input id="username" placeholder="Seu nome (ex: Sara)" />
+      <button class="btn" onclick="connect()">Conectar</button>
     </div>
 
-    <div id="chat" class="chat-box"></div>
-
-    <div class="controls">
-        <input id="message" placeholder="Digite sua mensagem...">
-        <button onclick="sendMessage()">Enviar</button>
+    <div class="tabs">
+      <div id="tabGlobal" class="tab active" onclick="setMode('GLOBAL')">Global</div>
+      <div id="tabDm" class="tab" onclick="setMode('DM')">Privado</div>
+      <div class="hint" id="hint">Clique em conectar</div>
     </div>
 
-    <div class="udp-section">
-        <button onclick="udpPing()">Testar UDP (Ping)</button>
-        <div id="udpResult" class="udp-result"></div>
+    <div class="userList" id="userList">
+      <!-- preenchido via USERS -->
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <div class="topbar">
+      <button class="mobileMenuBtn" onclick="toggleSidebar(true)">☰ Usuários</button>
+
+      <div class="convTitle">
+        <div class="h" id="convTitle">🌐 Chat Global</div>
+        <div class="s" id="convSub">Mensagens visíveis para todos conectados</div>
+      </div>
+
+      <div class="tools">
+        <label class="toggle" title="Onde o LokiBot responde">
+          <input type="checkbox" id="lokiGlobalToggle" />
+          <span>Loki no global</span>
+        </label>
+        <span class="small" id="meLabel">Você: —</span>
+      </div>
     </div>
 
+    <section id="chat" class="chat"></section>
+
+    <div class="composer">
+      <input id="message" placeholder="Digite uma mensagem..." onkeydown="onEnter(event)" />
+      <button class="btn send" onclick="sendMessage()">Enviar</button>
+    </div>
+
+    <div class="udpBar">
+      <button class="btn secondary" onclick="udpPing()">Testar UDP (Ping)</button>
+      <div id="udpResult" class="udpOut">UDP: pronto para testar (mostra timeout/perda)</div>
+    </div>
+  </main>
 </div>
 
 <script>
-let socket;
-let user;
+  let socket = null;
+  let me = "";
+  let mode = "GLOBAL";         // GLOBAL ou DM
+  let selectedUser = "";       // destino da DM
+  let onlineUsers = [];
 
-function connect() {
-    user = document.getElementById("username").value;
-    socket = new WebSocket("ws://" + location.host + "/chat");
+  // histórico por conversa:
+  // GLOBAL => key = "GLOBAL"
+  // DM com "Sara" => key = "DM:Sara"
+  const history = new Map();
 
-    socket.onopen = function() {
-        console.log("Conectado ao servidor");
-    };
-
-    socket.onmessage = function(event) {
-        addMessage(event.data);
-    };
-
-    socket.onclose = function() {
-        alert("Desconectado do servidor.");
-    };
-}
-
-function addMessage(text) {
-    const chat = document.getElementById("chat");
-    const div = document.createElement("div");
-    div.classList.add("message");
-
-    if (text.startsWith(user + ":")) {
-        div.classList.add("me");
+  function toggleSidebar(open){
+    const sb = document.getElementById("sidebar");
+    const ov = document.getElementById("overlay");
+    if(open){
+      sb.classList.add("open");
+      ov.classList.add("show");
     } else {
-        div.classList.add("other");
+      sb.classList.remove("open");
+      ov.classList.remove("show");
+    }
+  }
+
+  function setTcpStatus(connected){
+    document.getElementById("tcpStatus").innerText = connected ? "Conectado" : "Desconectado";
+    document.getElementById("dot").classList.toggle("on", connected);
+  }
+
+  function setHint(text){
+    document.getElementById("hint").innerText = text;
+  }
+
+  function setMode(newMode){
+    mode = newMode;
+    document.getElementById("tabGlobal").classList.toggle("active", mode === "GLOBAL");
+    document.getElementById("tabDm").classList.toggle("active", mode === "DM");
+
+    if(mode === "GLOBAL"){
+      selectedUser = "";
+      document.getElementById("convTitle").innerText = "🌐 Chat Global";
+      document.getElementById("convSub").innerText = "Mensagens visíveis para todos conectados";
+      setHint("Global");
+      renderConversation();
+    } else {
+      if(!selectedUser && onlineUsers.length){
+        // escolhe o primeiro diferente de mim
+        const first = onlineUsers.find(u => u !== me);
+        if(first) selectedUser = first;
+      }
+      updateDmHeader();
+      renderConversation();
+      setHint(selectedUser ? ("Privado com " + selectedUser) : "Escolha alguém online");
+    }
+  }
+
+  function updateDmHeader(){
+    if(!selectedUser){
+      document.getElementById("convTitle").innerText = "💬 Privado";
+      document.getElementById("convSub").innerText = "Escolha um usuário online à esquerda";
+      return;
+    }
+    document.getElementById("convTitle").innerText = "💬 Conversa com " + selectedUser;
+    document.getElementById("convSub").innerText = "Mensagens privadas (DM)";
+  }
+
+  function connect(){
+    const name = document.getElementById("username").value.trim();
+    if(!name) return alert("Digite seu nome.");
+    me = name;
+    document.getElementById("meLabel").innerText = "Você: " + me;
+
+    const wsProto = (location.protocol === "https:") ? "wss://" : "ws://";
+    const wsUrl = wsProto + location.host + "/chat";
+
+    socket = new WebSocket(wsUrl);
+
+    socket.onopen = () => {
+      setTcpStatus(true);
+      setHint("Conectado");
+      // JOIN
+      sendJson({ type: "JOIN", user: me });
+      // por padrão, abre global
+      setMode("GLOBAL");
+      toggleSidebar(false);
+    };
+
+    socket.onmessage = (ev) => {
+      try {
+        const msg = JSON.parse(ev.data);
+
+        if(msg.type === "USERS"){
+          onlineUsers = msg.users || [];
+          renderUsers();
+          // se estou em DM e meu alvo saiu, aviso
+          if(mode === "DM" && selectedUser && !onlineUsers.includes(selectedUser)){
+            appendLocalSystem("DM:" + selectedUser, "⚠️ " + selectedUser + " saiu. Escolha outro usuário.");
+            selectedUser = "";
+            updateDmHeader();
+            renderConversation();
+          }
+          return;
+        }
+
+        if(msg.type === "ERROR"){
+          appendLocalSystem(currentKey(), "❌ " + (msg.message || "Erro"));
+          renderConversation();
+          return;
+        }
+
+        if(msg.type === "MSG"){
+          handleIncomingMsg(msg);
+          return;
+        }
+
+      } catch(e){
+        // caso chegue algo não-JSON
+        appendLocalSystem(currentKey(), "⚠️ Mensagem inválida do servidor.");
+        renderConversation();
+      }
+    };
+
+    socket.onerror = (e) => {
+      console.error("WebSocket error", e);
+    };
+
+    socket.onclose = () => {
+      setTcpStatus(false);
+      setHint("Conexão fechada");
+      appendLocalSystem(currentKey(), "⚠️ Desconectado do servidor.");
+      renderConversation();
+    };
+  }
+
+  function sendJson(obj){
+    if(!socket || socket.readyState !== WebSocket.OPEN) return;
+    socket.send(JSON.stringify(obj));
+  }
+
+  function currentKey(){
+    if(mode === "GLOBAL") return "GLOBAL";
+    return selectedUser ? ("DM:" + selectedUser) : "DM:";
+  }
+
+  function handleIncomingMsg(msg){
+    const scope = msg.scope; // GLOBAL, DM, BOT, BOT_PRIVATE, etc
+    const from = msg.from || "";
+    const to = msg.to || null;
+    const text = msg.text || "";
+
+    if(scope === "GLOBAL" || scope === "BOT"){
+      pushHistory("GLOBAL", { scope, from, to, text });
+      if(mode === "GLOBAL") renderConversation();
+      return;
     }
 
-    div.innerText = text;
-    chat.appendChild(div);
+    // DM / BOT_PRIVATE: chave depende do par
+    if(scope.startsWith("DM")){
+      // se eu recebi/mande para alguém, a conversa é sempre com "o outro"
+      const other = (from === me) ? to : from;
+      const key = "DM:" + other;
+      pushHistory(key, { scope, from, to, text });
+      // se estou nessa conversa, atualiza tela
+      if(mode === "DM" && selectedUser === other) renderConversation();
+      return;
+    }
+
+    if(scope === "BOT_PRIVATE"){
+      // bot privado -> para mim
+      const key = "DM:LokiBot";
+      pushHistory(key, { scope, from, to, text });
+      // se estou em DM com LokiBot, atualiza
+      if(mode === "DM" && selectedUser === "LokiBot") renderConversation();
+      return;
+    }
+
+    // fallback
+    pushHistory("GLOBAL", { scope: "GLOBAL", from, to, text });
+    if(mode === "GLOBAL") renderConversation();
+  }
+
+  function pushHistory(key, item){
+    if(!history.has(key)) history.set(key, []);
+    history.get(key).push({ ...item, ts: new Date() });
+    // limita histórico para não crescer infinito
+    if(history.get(key).length > 300) history.get(key).shift();
+  }
+
+  function appendLocalSystem(key, text){
+    pushHistory(key, { scope: "SYSTEM", from: "System", to: null, text });
+  }
+
+  function renderUsers(){
+    const list = document.getElementById("userList");
+    list.innerHTML = "";
+
+    // Sempre mostrar Global (item fixo)
+    const globalItem = document.createElement("div");
+    globalItem.className = "userItem " + (mode === "GLOBAL" ? "active" : "");
+    globalItem.onclick = () => { setMode("GLOBAL"); toggleSidebar(false); };
+    globalItem.innerHTML = `
+      <div class="avatar">🌐</div>
+      <div class="userMeta">
+        <div class="userName">Chat Global</div>
+        <div class="userSub">todos conectados</div>
+      </div>
+    `;
+    list.appendChild(globalItem);
+
+    // LokiBot como "contato"
+    const lokiItem = document.createElement("div");
+    lokiItem.className = "userItem " + (mode === "DM" && selectedUser === "LokiBot" ? "active" : "");
+    lokiItem.onclick = () => {
+      mode = "DM";
+      selectedUser = "LokiBot";
+      document.getElementById("tabGlobal").classList.remove("active");
+      document.getElementById("tabDm").classList.add("active");
+      updateDmHeader();
+      setHint("Privado com LokiBot");
+      renderConversation();
+      toggleSidebar(false);
+    };
+    lokiItem.innerHTML = `
+      <div class="avatar">🐱</div>
+      <div class="userMeta">
+        <div class="userName">LokiBot</div>
+        <div class="userSub">IA (privado ou global)</div>
+      </div>
+    `;
+    list.appendChild(lokiItem);
+
+    // Usuários online (exceto eu)
+    const users = (onlineUsers || []).filter(u => u && u !== me);
+
+    if(users.length === 0){
+      const empty = document.createElement("div");
+      empty.style.padding = "12px";
+      empty.style.color = "rgba(255,255,255,.65)";
+      empty.style.fontSize = "13px";
+      empty.innerText = "Nenhum outro usuário online ainda.";
+      list.appendChild(empty);
+      return;
+    }
+
+    for(const u of users){
+      const item = document.createElement("div");
+      item.className = "userItem " + (mode === "DM" && selectedUser === u ? "active" : "");
+      item.onclick = () => {
+        mode = "DM";
+        selectedUser = u;
+        document.getElementById("tabGlobal").classList.remove("active");
+        document.getElementById("tabDm").classList.add("active");
+        updateDmHeader();
+        setHint("Privado com " + selectedUser);
+        renderConversation();
+        toggleSidebar(false);
+      };
+      item.innerHTML = `
+        <div class="avatar">👤</div>
+        <div class="userMeta">
+          <div class="userName">${escapeHtml(u)}</div>
+          <div class="userSub">online</div>
+        </div>
+      `;
+      list.appendChild(item);
+    }
+  }
+
+  function renderConversation(){
+    const chat = document.getElementById("chat");
+    chat.innerHTML = "";
+
+    let key = "GLOBAL";
+    if(mode === "DM"){
+      key = selectedUser ? ("DM:" + selectedUser) : "DM:";
+    }
+
+    if(mode === "DM" && !selectedUser){
+      const info = document.createElement("div");
+      info.className = "bubbleRow other";
+      info.innerHTML = `<div class="bubble other">Escolha um usuário online para conversar em privado.</div>`;
+      chat.appendChild(info);
+      chat.scrollTop = chat.scrollHeight;
+      return;
+    }
+
+    const items = history.get(key) || [];
+
+    for(const it of items){
+      const row = document.createElement("div");
+
+      const isMe = it.from === me;
+      const isBot = it.from === "LokiBot" || it.scope === "BOT" || it.scope === "BOT_PRIVATE";
+      const isSystem = it.scope === "SYSTEM" || it.from === "System";
+
+      if(isMe) row.className = "bubbleRow me";
+      else if(isBot) row.className = "bubbleRow bot";
+      else row.className = "bubbleRow other";
+
+      if(isBot){
+        row.innerHTML = `
+          <div class="bubbleAvatar">🐱</div>
+          <div class="bubble bot">
+            <b>LokiBot</b><br/>
+            ${escapeHtml(it.text)}
+            <div class="metaLine">${fmtTime(it.ts)}</div>
+          </div>
+        `;
+      } else if(isSystem){
+        row.innerHTML = `
+          <div class="bubble other" style="opacity:.85">
+            ${escapeHtml(it.text)}
+            <div class="metaLine">${fmtTime(it.ts)}</div>
+          </div>
+        `;
+      } else {
+        const bubbleClass = isMe ? "me" : "other";
+        const label = isMe ? "Você" : escapeHtml(it.from || "Usuário");
+        row.innerHTML = `
+          ${isMe ? "" : `<div class="bubbleAvatar">👤</div>`}
+          <div class="bubble ${bubbleClass}">
+            <b>${label}</b><br/>
+            ${escapeHtml(it.text)}
+            <div class="metaLine">${fmtTime(it.ts)}</div>
+          </div>
+        `;
+      }
+
+      chat.appendChild(row);
+    }
+
     chat.scrollTop = chat.scrollHeight;
-}
 
-function sendMessage() {
-    const msg = document.getElementById("message").value;
-    if (!msg) return;
+    // Atualiza header se DM
+    if(mode === "DM") updateDmHeader();
+  }
 
-    socket.send(user + ": " + msg);
-    document.getElementById("message").value = "";
-}
+  function onEnter(ev){
+    if(ev.key === "Enter") sendMessage();
+  }
 
-async function udpPing() {
-    const div = document.getElementById("udpResult");
-    div.innerText = "Enviando...";
-    try {
-        const res = await fetch("/udp/ping");
-        const text = await res.text();
-        div.innerText = text;
-    } catch (e) {
-        div.innerText = "Erro ao testar UDP";
+  function sendMessage(){
+    const text = document.getElementById("message").value.trim();
+    if(!text) return;
+
+    if(!socket || socket.readyState !== WebSocket.OPEN){
+      alert("Conecte primeiro.");
+      return;
     }
-}
-</script>
 
+    // Se estou falando com LokiBot no privado (DM:LokiBot) -> BOT PRIVATE ou GLOBAL dependendo do toggle
+    if(mode === "DM" && selectedUser === "LokiBot"){
+      const lokiGlobal = document.getElementById("lokiGlobalToggle").checked;
+      sendJson({ type: "BOT", mode: lokiGlobal ? "GLOBAL" : "PRIVATE", text });
+      // opcional: mostrar no histórico como "você para Loki"
+      pushHistory("DM:LokiBot", { scope:"DM", from: me, to:"LokiBot", text, ts:new Date() });
+      renderConversation();
+      document.getElementById("message").value = "";
+      return;
+    }
+
+    if(mode === "GLOBAL"){
+      sendJson({ type: "GLOBAL_MSG", text });
+    } else {
+      if(!selectedUser){
+        alert("Escolha um usuário online para DM.");
+        return;
+      }
+      sendJson({ type: "DM", to: selectedUser, text });
+    }
+
+    document.getElementById("message").value = "";
+  }
+
+  async function udpPing(){
+    const div = document.getElementById("udpResult");
+    div.innerText = "UDP: enviando...";
+    try {
+      const res = await fetch("/udp/ping");
+      const text = await res.text();
+      div.innerText = "UDP: " + text;
+    } catch (e) {
+      div.innerText = "UDP: erro ao chamar /udp/ping";
+    }
+  }
+
+  function fmtTime(d){
+    try{
+      const hh = String(d.getHours()).padStart(2,'0');
+      const mm = String(d.getMinutes()).padStart(2,'0');
+      return `${hh}:${mm}`;
+    } catch { return ""; }
+  }
+
+  function escapeHtml(str){
+    return String(str)
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+  }
+</script>
 </body>
 </html>
