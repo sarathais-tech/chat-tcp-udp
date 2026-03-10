@@ -95,5 +95,9 @@ Integração com o modelo **Llama 3.2** (via Ollama).
 
 ---
 
+## 📝 Integrantes do Projeto
+- **Sara Thais** – Desenvolvimento do sistema, arquitetura cliente-servidor, criptografia e interface gráfica.
+- **Gabriel Penha** – Apresentação do projeto e validação funcional do sistema.
+
 ## ⚖️ Licença
 Este projeto foi desenvolvido para fins estritamente educacionais, demonstrando conceitos fundamentais de redes de computadores e sistemas distribuídos.
